@@ -25,7 +25,7 @@ jobs:
           node-version: '22'
 
       - name: Java kur
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
@@ -35,27 +35,31 @@ jobs:
         with:
           packages: 'platform-tools'
 
-      - name: Proje dosyalarını kontrol et
-        run: |
-          test -f package.json
-          test -f capacitor.config.json
-          test -d public
-
       - name: Bağımlılıkları kur
         run: npm install
 
       - name: Web dosyalarını hazırla
         run: npm run copy-web
 
+      - name: Capacitor Android paketini kontrol et
+        run: |
+          if ! npm ls @capacitor/android --depth=0; then
+            CORE_VERSION=$(node -p "require('@capacitor/core/package.json').version")
+            npm install "@capacitor/android@$CORE_VERSION"
+          fi
+
       - name: Android projesini oluştur
-        run: npx cap add android
+        run: |
+          if [ ! -f android/gradlew ]; then
+            npx cap add android
+          fi
 
       - name: Android dosyalarını eşitle
         run: npx cap sync android
 
       - name: APK derle
         working-directory: android
-        run: ./gradlew --no-daemon assembleDebug
+        run: chmod +x gradlew && ./gradlew --no-daemon assembleDebug
 
       - name: APK dosyasını kaydet
         uses: actions/upload-artifact@v4
