@@ -1,0 +1,58 @@
+
+name: Kamera Izleme APK derle
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kaynak kodunu al
+        uses: actions/checkout@v4
+
+      - name: Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Java kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Android SDK kur
+        uses: android-actions/setup-android@v3
+
+      - name: Android lisanslarini kabul et
+        run: yes | sdkmanager --licenses || true
+
+      - name: Bagimliliklari kur
+        run: npm install
+
+      - name: Web dosyalarini hazirla
+        run: npm run copy-web
+
+      - name: Android projesini olustur
+        run: npx cap add android
+
+      - name: Android dosyalarini senkronize et
+        run: npx cap sync android
+
+      - name: APK derle
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: APK dosyasini yukle
+        uses: actions/upload-artifact@v4
+        with:
+          name: kamera-izleme-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
