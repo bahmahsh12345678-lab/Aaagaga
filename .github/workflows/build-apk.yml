@@ -33,7 +33,7 @@ jobs:
       - name: Android SDK kur
         uses: android-actions/setup-android@v4
         with:
-          packages: 'platform-tools'
+          packages: platform-tools
 
       - name: Bağımlılıkları kur
         run: npm install
@@ -41,30 +41,30 @@ jobs:
       - name: Web dosyalarını hazırla
         run: npm run copy-web
 
-      - name: Capacitor Android paketini kontrol et
+      - name: Capacitor Android paketini kur
+        shell: bash
         run: |
-          if ! npm ls @capacitor/android --depth=0; then
-            CORE_VERSION=$(node -p "require('@capacitor/core/package.json').version")
-            npm install "@capacitor/android@$CORE_VERSION"
-          fi
+          CORE_VERSION=$(node -p "require('./node_modules/@capacitor/core/package.json').version")
+          npm install --no-save "@capacitor/android@$CORE_VERSION"
 
-      - name: Android projesini oluştur
+      - name: Android projesini temiz oluştur
         run: |
-          if [ ! -f android/gradlew ]; then
-            npx cap add android
-          fi
+          rm -rf android
+          npx cap add android
 
       - name: Android dosyalarını eşitle
         run: npx cap sync android
 
       - name: APK derle
         working-directory: android
-        run: chmod +x gradlew && ./gradlew --no-daemon assembleDebug
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
 
       - name: APK dosyasını kaydet
         uses: actions/upload-artifact@v4
         with:
-          name: kamera-izleme-debug-apk
+          name: kamera-izleme-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
