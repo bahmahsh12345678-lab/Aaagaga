@@ -32,6 +32,14 @@ jobs:
 
       - name: Android SDK kur
         uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
+
+      - name: Proje dosyalarını kontrol et
+        run: |
+          test -f package.json
+          test -f capacitor.config.json
+          test -d public
 
       - name: Bağımlılıkları kur
         run: npm install
